@@ -1,4 +1,4 @@
-import hashlib, requests, os, time, pickle
+import hashlib, requests, os, time, pickle, sys
 
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
@@ -12,7 +12,9 @@ def login_get_cookies():
     binary = FirefoxBinary('Firefox.exe')
     driver = webdriver.Firefox(executable_path=r'geckodriver.exe')
     driver.get('https://quavergame.com/download/mapset/1')
-    input("Press Enter to continue...")
+    while(driver.current_url != 'https://quavergame.com/'):
+        pass
+    time.sleep(.5)
     cookies = driver.get_cookies()
     new_cookies = {}
     for x in cookies:
@@ -24,7 +26,7 @@ def login_get_cookies():
 
 # downloads a quaver map using a session containing Steam login cookies
 def download_map(cookies, mapset_id): 
-    with open(songs_dir + str(mapset_id) + '.qp', 'wb') as file:
+    with open('Updated Songs/' + str(mapset_id) + '.qp', 'wb') as file:
         file.write(requests.get('https://quavergame.com/download/mapset/' + str(mapset_id), cookies=cookies).content)
         
 def save_cookies(cookies):
@@ -41,7 +43,7 @@ def read_cookies():
 # cookies = login_get_cookies()
 # save_cookies(cookies)
 cookies = read_cookies()
-print('Cookies Set')
+print('\nCookies Set')
 print(cookies)
 
 # count all maps
@@ -64,15 +66,16 @@ for foldername in os.listdir(songs_dir):
                     mapset_id = request.json()['map']['mapset_id']
                     server_hash = request.json()['map']['md5']
                     update = (file_hash != server_hash)
-                print('File Hash:', file_hash)
-                print('Server Hash:', server_hash)
-                print('Update:', update)
+                print('\nFile Hash:', file_hash)
+                print('\nServer Hash:', server_hash)
+                print('\nUpdate:', update)
                 
                 if(update):
                     download_map(cookies, mapset_id)
-                    print('Map Downloaded')
+                    print('\nMap Downloaded')
                     break
             except:
+                print(sys.exc_info()[0])
                 break
         bar.next()
     bar.finish()
