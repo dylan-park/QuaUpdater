@@ -1,13 +1,14 @@
-import hashlib, requests, os, time
+import hashlib, requests, os, time, pickle
 
 from selenium import webdriver
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+from progress.bar import Bar
 
 songs_dir = 'G:/Steam/steamapps/common/Quaver/Songs/'
 
 
 # opens Steam and allows a user to log in, creating login cookies that are then returned in a session
-def login_set_cookies(): 
+def login_get_cookies(): 
     binary = FirefoxBinary('Firefox.exe')
     driver = webdriver.Firefox(executable_path=r'geckodriver.exe')
     driver.get('https://quavergame.com/download/mapset/1')
@@ -25,13 +26,32 @@ def login_set_cookies():
 def download_map(cookies, mapset_id): 
     with open(songs_dir + str(mapset_id) + '.qp', 'wb') as file:
         file.write(requests.get('https://quavergame.com/download/mapset/' + str(mapset_id), cookies=cookies).content)
+        
+def save_cookies(cookies):
+    with open('cookies', 'wb') as file:
+        pickle.dump(cookies, file)
 
 
-# main, currently scans all files in songs_dir and checks for update. if there is one then get cookies and download map (TESTING ONLY)
-# TODO: Handly scanning of inner directories in a real quaver song folder structure
-cookies = login_set_cookies()
+def read_cookies():
+    with open('cookies', 'rb') as file:
+        cookies = pickle.load(file)
+        return cookies
+
+# main, currently scans all files in songs_dir and checks for update.
+# cookies = login_get_cookies()
+# save_cookies(cookies)
+cookies = read_cookies()
 print('Cookies Set')
 print(cookies)
+
+# count all maps
+map_count = 0
+for path in os.listdir(songs_dir):
+    map_count += 1
+
+bar = Bar('Processing', max=map_count)
+
+
 for foldername in os.listdir(songs_dir):
     for filename in os.listdir(songs_dir + foldername):
         if filename.endswith(".qua"):
@@ -54,3 +74,5 @@ for foldername in os.listdir(songs_dir):
                     break
             except:
                 break
+        bar.next()
+    bar.finish()
