@@ -43,7 +43,7 @@ def read_cookies():
 # cookies = login_get_cookies()
 # save_cookies(cookies)
 cookies = read_cookies()
-print('\nCookies Set')
+print('Cookies Set')
 print(cookies)
 
 # count all maps
@@ -54,6 +54,7 @@ for path in os.listdir(songs_dir):
 bar = Bar('Processing', max=map_count)
 
 
+# TODO: delete current folder if song has update to prevent dupe songs in listing
 for foldername in os.listdir(songs_dir):
     for filename in os.listdir(songs_dir + foldername):
         if filename.endswith(".qua"):
@@ -67,15 +68,17 @@ for foldername in os.listdir(songs_dir):
                     server_hash = request.json()['map']['md5']
                     update = (file_hash != server_hash)
                 print('\nFile Hash:', file_hash)
-                print('\nServer Hash:', server_hash)
-                print('\nUpdate:', update)
+                print('Server Hash:', server_hash)
+                print('Update:', update)
                 
+                if (not update):
+                    break
                 if(update):
                     download_map(cookies, mapset_id)
-                    print('\nMap Downloaded')
+                    print('Map Downloaded')
                     break
             except:
                 print(sys.exc_info()[0])
                 break
-        bar.next()
-    bar.finish()
+    bar.next()
+bar.finish()
